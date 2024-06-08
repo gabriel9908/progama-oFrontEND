@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Empresa</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Custom CSS -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            padding-top: 60px; /* Para compensar o cabeçalho fixo */
+        }
+        header {
+            background-color: #343a40;
+            color: #fff;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 10px 0;
+            text-align: center;
+            z-index: 1000;
+        }
+        .container {
+            margin-top: 80px; /* Para evitar sobreposição com o cabeçalho */
+        }
+        .employee {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #fff;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+        }
+        .employee:hover {
+            background-color: #f0f0f0;
+        }
+        .employee.active {
+            background-color: #f0f0f0;
+        }
+        #add-employee {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+        }
+        #add-employee h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        #add-employee-form input[type="text"],
+        #add-employee-form select {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        #add-employee-form .btn-primary {
+            width: auto;
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #add-employee-form .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        #employees {
+            margin-top: 20px;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Gerenciamento de Empresa</h1>
+    </header>
+    <div class="container">
+        <section id="employee-list">
+            <h2>Lista de Funcionários</h2>
+            <div id="employees"></div>
+        </section>
+        <section id="add-employee">
+            <h2>Adicionar Funcionário</h2>
+            <form id="add-employee-form">
+                <input type="text" id="name" placeholder="Nome" required>
+                <input type="text" id="position" placeholder="Cargo" required>
+                <select id="department" required>
+                    <option value="">Selecione o Departamento</option>
+                    <option value="Financeiro">Financeiro</option>
+                    <option value="RH">RH</option>
+                    <option value="TI">TI</option>
+                </select>
+                <button type="submit" class="btn btn-primary">Adicionar</button>
+            </form>
+        </section>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            // Usabilidade para a lista de funcionários
+            $('.employee').click(function(){
+                $('.employee').removeClass('active');
+                $(this).addClass('active');
+                console.log('Funcionário selecionado:', $(this).find('strong').first().text());
+            });
+
+            // Interface para o botão de adicionar funcionário
+            $('.btn-primary').hover(function(){
+                $(this).css('background-color', '#0069d9');
+            }, function(){
+                $(this).css('background-color', '#007bff');
+            });
+
+            // Backend para salvar funcionário no localStorage
+            $('#add-employee-form').submit(function(event){
+                event.preventDefault();
+                let name = $('#name').val();
+                let position = $('#position').val();
+                let department = $('#department').val();
+                let employees = JSON.parse(localStorage.getItem('employees')) || [];
+                let id = employees.length + 1;
+                employees.push({ id, name, position, department });
+                localStorage.setItem('employees', JSON.stringify(employees));
+                displayEmployees();
+                $(this).trigger('reset');
+                console.log('Funcionário adicionado:', name);
+            });
+
+            // Exibir funcionários ao carregar a página
+            function displayEmployees() {
+                let employees = JSON.parse(localStorage.getItem('employees')) || [];
+                let employeeHTML = '';
+                employees.forEach(employee => {
+                    employeeHTML += `
+                        <div class="employee">
+                            <p><strong>Nome:</strong> ${employee.name}</p>
+                            <p><strong>Cargo:</strong> ${employee.position}</p>
+                            <p><strong>Departamento:</strong> ${employee.department}</p>
+                            <button class="btn btn-danger" onclick="deleteEmployee(${employee.id})">Excluir</button>
+                        </div>
+                    `;
+                });
+                $('#employees').html(employeeHTML);
+            }
+
+            // Excluir funcionário
+            window.deleteEmployee = function(id) {
+                let employees = JSON.parse(localStorage.getItem('employees')) || [];
+                let deletedEmployeeName;
+                employees = employees.filter(employee => {
+                    if (employee.id === id) {
+                        deletedEmployeeName = employee.name;
+                    }
+                    return employee.id !== id;
+                });
+                localStorage.setItem('employees', JSON.stringify(employees));
+                displayEmployees();
+                console.log('Funcionário excluído:', deletedEmployeeName);
+            }
+
+            // Exibir funcionários ao carregar a página
+            displayEmployees();
+        });
+
+        // Sobrescrever console.log para adicionar prefixo
+        (function(){
+            var oldLog = console.log;
+            console.log = function(){
+                var args = [].slice.call(arguments);
+                args.unshift('[LOG]');
+                oldLog.apply(this, args);
+            }
+        })();
+    </script>
+</body>
+</html>
